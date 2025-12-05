@@ -1,0 +1,577 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=3">
+    <link rel="stylesheet" href="{% static 'css/teleportation.css' %}?v=3">
+
+   <!--CodeMirror for syntax highlighting--> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.8/codemirror.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.8/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.8/mode/python/python.min.js"></script>
+
+  <!-- Import themes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/theme/eclipse.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/theme/dracula.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/theme/monokai.min.css">
+
+  <!-- auto-complete -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/addon/hint/show-hint.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/addon/hint/show-hint.min.js"></script>
+
+    <script>
+        function ShowSpinner() {
+            var spinner = document.getElementById('spinner');
+            var mediaContent = document.getElementById('media-content');
+            spinner.style.display = 'block';
+            if (mediaContent) {
+                mediaContent.style.display = 'none';
+            }
+        }
+        function HideSpinner() {
+            var spinner = document.getElementById('spinner');
+            spinner.style.display = 'none';
+        }
+        function ShowMediaContent() {
+            var mediaContent = document.getElementById('media-content');
+            if (mediaContent) {
+                mediaContent.style.display = 'block';
+            }
+        }
+    </script>
+    
+{% endblock %}
+
+{% block content %}
+    <nav class="page-header">
+        <div class="nav-left">
+            <a href="/"><i class="fas fa-home"></i></a>
+        </div>
+        <div class="nav-center">
+            <!-- <h1>Quantum Teleportation</h1> -->
+        </div>
+        
+        <div class="nav-right">
+        </div>
+    </nav>
+
+    <div class="container" id="container">
+        <div class="code-section">
+            <div class="section-header">
+                <h2><i class="fas fa-code"></i> Code Editor</h2>
+                <p class="section-subtitle">Customize the quantum circuit parameters and algorithm logic</p>
+            </div>
+            <div style="display: none;" hidden class="top-row-buttons">
+                <div>
+                    <form style="display: none;" action="{% url 'save_current_code' %}" method="post" id="save-current-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="save_current">
+                        <input type="hidden" name="hidden_code_current" id="hidden_code_current">
+                        <button type="submit" id="save-btn">Save</button>
+                    </form>
+            
+                    <button style="display: none;" type="button" id="save-new-btn">New Project</button>
+            
+                    <!-- Dropdown to open saved codes -->
+                    <select style="display: none;"  id="saved-codes">
+                        <option value="">Open</option>
+                        {% for code in saved_codes %}
+                        <option value="{{ code.id }}" >{{ code.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <br><br>
+                </div>
+
+                <div style="display: none;" >
+                    <label class="theme-toggle">
+                        <input type="checkbox">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+    
+            <form method="post" id="code-form">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="execute">
+                <textarea hidden name="code" id="code" rows="20" cols="50" 
+                autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">{{ previous_code }}</textarea><br>
+                <input type="submit" value="Generate">
+            </form>
+        </div>
+        
+        <!-- Modal for saving code-->
+        <div id="save-modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <form action="{% url 'save_new_code' %}" method="post" id="save-new-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="save">
+                    <label for="name">Enter a name for the project:</label><br>
+                    <input type="text" id="name" name="name"><br>
+                    <input type="hidden" name="hidden_code_new" id="hidden_code_new">
+                    <button type="submit">Save</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="media-section">
+            <div class="section-header">
+                <h2><i class="fas fa-play-circle"></i> Visualization</h2>
+                <p class="section-subtitle">Watch your quantum algorithm come to life</p>
+            </div>
+            <p hidden>
+                {{ result_message }}
+            </p> 
+
+            <div id="spinner" style="display: none;" class="spinner"></div>
+
+            <div id="media-content">
+            {% if video_exists %}
+                <video id="videoPlayer" controls muted preload="auto" style="width: 100%; height: auto; display: block; pointer-events: auto;">
+                    <source src="{{ MEDIA_URL }}{{ class_name }}.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <a href="{{ MEDIA_URL }}{{ class_name }}.mp4" class="download-btn" download>Download</a>
+            {% elif image_exists %}
+                <img src="{{ MEDIA_URL }}{{ class_name }}.png" alt="Image">
+                <a href="{{ MEDIA_URL }}{{ class_name }}.png" class="download-btn" download>Download</a>
+            {% else %}
+                <img src="{% static 'img/placeholder.png' %}" alt="Image" id="placeholder">
+            {% endif %}
+            </div>
+        </div>
+    </div>
+  
+{% endblock %}
+
+{% block extra_scripts %}
+    <script>
+        // Extract class name from code
+        function extractClassName(code) {
+            const classMatch = code.match(/class\s+(\w+)\s*\(/);
+            return classMatch ? classMatch[1] : 'TeleportationVisualization';
+        }
+
+        // Check if video exists for the given code and update display
+        function checkForExistingVideo(code) {
+            const className = extractClassName(code);
+            const videoUrl = '{{ MEDIA_URL }}' + className + '.mp4';
+            const imageUrl = '{{ MEDIA_URL }}' + className + '.png';
+            
+            console.log('Checking for existing media:', className);
+            
+            fetch(videoUrl, { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        console.log('Found existing video:', videoUrl);
+                        updateMediaDisplay(videoUrl, 'video', className);
+                    } else {
+                        return fetch(imageUrl, { method: 'HEAD' });
+                    }
+                })
+                .then(response => {
+                    if (response && response.ok) {
+                        console.log('Found existing image:', imageUrl);
+                        updateMediaDisplay(imageUrl, 'image', className);
+                    } else {
+                        console.log('No existing media found');
+                    }
+                })
+                .catch(error => console.error('Error checking for media:', error));
+        }
+
+        // Update the media display with the found video/image
+        function updateMediaDisplay(url, type, className) {
+            const mediaContent = document.getElementById('media-content');
+            
+            // Add cache-busting timestamp to prevent browser from using cached version
+            const cacheBuster = '?t=' + new Date().getTime();
+            const finalUrl = url + cacheBuster;
+            
+            if (type === 'video') {
+                mediaContent.innerHTML = `
+                    <video id="videoPlayer" controls muted preload="auto" style="width: 100%; height: auto; display: block; pointer-events: auto;">
+                        <source src="${finalUrl}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <a href="${url}" class="download-btn" download>Download</a>
+                `;
+                // Force video to load and enable controls
+                const video = mediaContent.querySelector('video');
+                if (video) {
+                    video.load();
+                    // Ensure controls are enabled after loading
+                    video.addEventListener('loadedmetadata', function() {
+                        console.log('Video metadata loaded, duration:', video.duration);
+                        video.controls = true;
+                    });
+                    video.addEventListener('canplay', function() {
+                        console.log('Video can play');
+                    });
+                }
+            } else if (type === 'image') {
+                mediaContent.innerHTML = `
+                    <img src="${finalUrl}" alt="Image">
+                    <a href="${url}" class="download-btn" download>Download</a>
+                `;
+            }
+            
+            ShowMediaContent();
+            HideSpinner();
+        }
+
+        // Wait for DOM to be ready
+        window.addEventListener('DOMContentLoaded', function() {
+            createParameterInputs();
+            
+            // Hide spinner and show media content if it exists
+            HideSpinner();
+            ShowMediaContent();
+        });
+
+        function createParameterInputs() {
+            const paramDiv = document.createElement('div');
+            paramDiv.style.marginTop = '10px';
+            paramDiv.style.marginBottom = '10px';
+            paramDiv.innerHTML = `
+                <label for="input-state" style="font-weight: bold;">qubit state: </label>
+                <select id="input-state" style="padding: 5px; margin-right: 15px;">
+                    <option value="|0⟩">|0⟩</option>
+                    <option value="|1⟩">|1⟩</option>
+                    <option value="|+⟩" selected>|+⟩</option>
+                    <option value="|-⟩">|-⟩</option>
+                </select>
+                
+                <label for="input-short-form" style="font-weight: bold;">short form: </label>
+                <select id="input-short-form" style="padding: 5px; margin-right: 15px;">
+                    <option value="False" selected>False</option>
+                    <option value="True">True</option>
+                </select>
+                
+                <button type="button" id="update-params-btn" style="padding: 5px 15px; cursor: pointer;">Update Parameters</button>
+            `;
+            
+            const topRow = document.querySelector('.container');
+            const firstDiv = topRow.querySelector('div');
+            firstDiv.appendChild(paramDiv);
+            
+            document.getElementById('update-params-btn').addEventListener('click', updateParameters);
+            
+            setTimeout(readCurrentParameters, 500);
+        }
+
+        // Map state to alpha and beta coefficients
+        function getCoefficients(state) {
+            const stateMap = {
+                '|0⟩': { alpha: '1', beta: '0' },
+                '|1⟩': { alpha: '0', beta: '1' },
+                '|+⟩': { alpha: '\\frac{1}{\\sqrt{2}}', beta: '\\frac{1}{\\sqrt{2}}' },
+                '|-⟩': { alpha: '\\frac{1}{\\sqrt{2}}', beta: '-\\frac{1}{\\sqrt{2}}' }
+            };
+            return stateMap[state] || stateMap['|+⟩'];
+        }
+
+        function updateParameters() {
+            const stateValue = document.getElementById('input-state').value;
+            const shortFormValue = document.getElementById('input-short-form').value;
+            
+            const coeffs = getCoefficients(stateValue);
+            const alphaValue = coeffs.alpha;
+            const betaValue = coeffs.beta;
+            
+            let code = editor.getValue();
+            
+            // Pattern to find: def __init__(self, alpha=r"...", beta=r"...", short_form=False, **kwargs):
+            const initPattern = /def\s+__init__\s*\(\s*self\s*,\s*alpha\s*=\s*r"[^"]*"\s*,\s*beta\s*=\s*r"[^"]*"\s*,\s*short_form\s*=\s*(?:True|False)\s*,\s*\*\*kwargs\s*\)/;
+            
+            const initReplacement = `def __init__(self, alpha=r"${alphaValue}", beta=r"${betaValue}", short_form=${shortFormValue}, **kwargs)`;
+            
+            let newCode = code.replace(initPattern, initReplacement);
+            
+            if (newCode !== code) {
+                editor.setValue(newCode);
+                alert(`✓ Parameters updated successfully!\nstate = ${stateValue}\nalpha = ${alphaValue}\nbeta = ${betaValue}\nshort_form = ${shortFormValue}`);
+            } else {
+                alert('⚠ Could not find parameter line.\nMake sure the line exists:\n• def __init__(self, alpha=r"...", beta=r"...", short_form=..., **kwargs):');
+            }
+        }
+
+        function readCurrentParameters() {
+            try {
+                const code = editor.getValue();
+                const pattern = /def\s+__init__\s*\(\s*self\s*,\s*alpha\s*=\s*r"([^"]*)"\s*,\s*beta\s*=\s*r"([^"]*)"\s*,\s*short_form\s*=\s*(True|False)\s*,\s*\*\*kwargs\s*\)/;
+                const match = code.match(pattern);
+                
+                if (match) {
+                    const alpha = match[1];
+                    const beta = match[2];
+                    
+                    // Determine state from alpha and beta
+                    let state = '|+⟩'; // default
+                    if (alpha === '1' && beta === '0') state = '|0⟩';
+                    else if (alpha === '0' && beta === '1') state = '|1⟩';
+                    else if (alpha === '\\frac{1}{\\sqrt{2}}' && beta === '\\frac{1}{\\sqrt{2}}') state = '|+⟩';
+                    else if (alpha === '\\frac{1}{\\sqrt{2}}' && beta === '-\\frac{1}{\\sqrt{2}}') state = '|-⟩';
+                    
+                    document.getElementById('input-state').value = state;
+                    document.getElementById('input-short-form').value = match[3];
+                    console.log(`Read parameters from code: state=${state}, alpha=${alpha}, beta=${beta}, short_form=${match[3]}`);
+                }
+            } catch (error) {
+                console.log('Could not read parameters yet, editor may not be ready');
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'u') {
+                e.preventDefault();
+                updateParameters();
+            }
+        });
+
+        document.getElementById('code-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const stateValue = document.getElementById('input-state').value;
+            const shortFormValue = document.getElementById('input-short-form').value;
+            
+            if (stateValue) {
+                const coeffs = getCoefficients(stateValue);
+                const alphaValue = coeffs.alpha;
+                const betaValue = coeffs.beta;
+                
+                let code = editor.getValue();
+                const initPattern = /def\s+__init__\s*\(\s*self\s*,\s*alpha\s*=\s*r"[^"]*"\s*,\s*beta\s*=\s*r"[^"]*"\s*,\s*short_form\s*=\s*(?:True|False)\s*,\s*\*\*kwargs\s*\)/;
+                const initReplacement = `def __init__(self, alpha=r"${alphaValue}", beta=r"${betaValue}", short_form=${shortFormValue}, **kwargs)`;
+                
+                let newCode = code.replace(initPattern, initReplacement);
+                
+                if (newCode !== code) {
+                    editor.setValue(newCode);
+                }
+            }
+            
+            ShowSpinner();
+            this.submit();
+        });
+
+        var editor = CodeMirror.fromTextArea(document.getElementById('code'), {
+            mode: 'python',
+            lineNumbers: true,
+            tabSize: 4,
+            theme: 'dracula',
+            extraKeys: {
+                "Ctrl-Space": "autocomplete"
+            }
+        });
+
+        editor.getWrapperElement().style.display = 'none';
+
+        dataToSend = {"code_id" : "teleportation"};
+        
+        fetch(`get_code_text/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: JSON.stringify(dataToSend)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => { throw new Error(text); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Received code text:', data.code_text);
+            editor.setValue(data.code_text);
+
+            function setCodeName(codeName) {
+                fetch('set_code_name/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                    body: JSON.stringify({ code_name: codeName })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        console.log(data.message);
+                    } else {
+                        console.error(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+
+            console.log(`code_name: ${data.code_name}`)
+            setCodeName(data.code_name);
+
+            // Check for existing video after code is loaded
+            checkForExistingVideo(data.code_text);
+
+            return fetch('update-code/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ code_text: data.code_text })
+            });
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => { throw new Error(text); });
+            }
+            return response.json();
+        })
+        .then(result => {
+            console.log('Update status:', result.status);
+            if (result.status === 'success') {
+                console.log('Django variable updated:', result.code_text);
+            } else {
+                console.log('Failed to update Django variable');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    </script>
+
+    <script>
+        var toggle_button = document.getElementsByClassName('theme-toggle')[0];
+        toggle_button.addEventListener('change', function() {
+            var Box = toggle_button.getElementsByTagName('input')[0];    
+            if (Box.checked) {
+                editor.setOption("theme", "eclipse");
+            } else {
+                editor.setOption("theme", "dracula");
+            }
+        });
+    </script>
+    
+    <script>
+        var modal = document.getElementById("save-modal");
+        var savenewBtn = document.getElementById("save-new-btn");
+        var span = document.getElementsByClassName("close")[0];
+        var openDropdown = document.getElementById("saved-codes");   
+        var saveBtn = document.getElementById("save-btn");
+        var SaveCurrentForm = document.getElementById("save-current-form");
+
+        savenewBtn.onclick = function() {
+            if (isAuthenticated){
+                modal.style.display = "block";                         
+            }
+            else{
+                alert("You have to Log in to do that");
+            }
+        }
+    
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+    
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    
+        document.getElementById("save-new-form").onsubmit = function() {
+            var name = document.getElementById("name").value.trim();
+            if (name === "") {
+                alert("Please enter a name for the code.");
+                return false;
+            }
+        }
+
+        document.getElementById('save-new-form').addEventListener('submit', function(event) {
+            var visible_code = document.getElementById('code').value;
+            var hidden_code= document.getElementById('hidden_code_new');
+            hidden_code.value = visible_code;
+        });
+
+        openDropdown.onclick = function() {
+            if(!isAuthenticated){
+                event.preventDefault();
+                alert('You will have to Log in to do that');
+            }else {
+                var options = openDropdown.getElementsByTagName("option");
+                if (options.length <= 1) {
+                    noOptionsMessage.style.display = "block";
+                } else {
+                    noOptionsMessage.style.display = "none";
+                }
+            }
+        }
+
+        saveBtn.onclick = async function (event) {
+            event.preventDefault();
+
+            if (!isAuthenticated) {
+                alert("You have to log in to do that");
+                return;
+            }
+
+            try {
+                const response = await fetch('get_code_name/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const codeName = data.result;
+                console.log('Code Name:', codeName);
+
+                if (!codeName) {
+                    alert('Create new project first');
+                    console.log('getCodeName returned Null');
+                    return;
+                }
+
+                const inputCode = editor.getValue();
+                console.log('Input code:', inputCode);
+
+                if (!inputCode) {
+                    alert('Input cannot be empty.');
+                    return;
+                }
+
+                const saveResponse = await fetch('save_current_code/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                    body: JSON.stringify({
+                        code_text: inputCode,
+                        code_name: codeName,
+                        form_type: 'save_current'
+                    }),
+                });
+
+                if (saveResponse.ok) {
+                    alert('Code saved successfully!');
+                } else {
+                    const errorText = await saveResponse.text();
+                    console.log('Error response:', errorText);
+                    alert('Failed to save code.');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An unexpected error occurred while saving.');
+            }
+        };
+    </script>
+{% endblock %}

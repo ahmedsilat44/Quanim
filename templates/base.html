@@ -4,21 +4,11 @@
 <html lang="en">
 <head>
 
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-G43JV3W9MS"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-G43JV3W9MS');
-</script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}CloudPy Manim{% endblock %}</title>
-    <!-- <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.png' %}"> -->
+    <title>{% block title %}Quanim{% endblock %}</title>
 
-    <!-- Favicon; from https://realfavicongenerator.net/ -->
+    <!-- Favicon -->
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'fav/apple-touch-icon.png' %}">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'fav/favicon-32x32.png' %}">
     <link rel="icon" type="image/png" sizes="16x16" href="{% static 'fav/favicon-16x16.png' %}">
@@ -27,7 +17,10 @@
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="theme-color" content="#ffffff">
 
-    <!-- For Font Awesome Icon -->
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome Icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
@@ -45,13 +38,13 @@
     
 </head>
 
-<body>
-    <nav>
+<body>  
+    <!-- <nav>
         <div class="nav-left">
             <a href="/"><i class="fas fa-home"></i></a>
         </div>
         <div class="nav-center">
-            <a href="/manim">Cloudpy Manim beta</a>
+            <a href="/">Quanim</a>
         </div>
         
         <div class="nav-right">
@@ -75,21 +68,21 @@
             </div>
         </div>
     </nav>
-    
+     -->
 
     
         {% block content %}
         <!-- Page-specific content will be injected here -->
         {% endblock %}
     
-        <footer style="text-align: center;">
+        <!-- <footer style="text-align: center;">
             <p>
                 <small>
                     This project is open-source. 
                     <a href="https://github.com/abhinavpbabu/CloudPy" target="_blank" rel="noopener noreferrer">View the source code</a>.
                 </small>
             </p>
-        </footer>
+        </footer> -->
         
 
     {% if user.is_authenticated %}

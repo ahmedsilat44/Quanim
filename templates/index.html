@@ -8,20 +8,13 @@
 
 
 <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-G43JV3W9MS"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
 
-  gtag('config', 'G-G43JV3W9MS');
-</script>
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CloudPy - Cloud Computing Platform for Python Libraries</title>
+    <title>Quanim - Quantum Algorithm Visualizations</title>
 
-    <!-- Favicon; from https://realfavicongenerator.net/ -->
+    <!-- Favicon -->
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'fav/apple-touch-icon.png' %}">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'fav/favicon-32x32.png' %}">
     <link rel="icon" type="image/png" sizes="16x16" href="{% static 'fav/favicon-16x16.png' %}">
@@ -30,54 +23,241 @@
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="theme-color" content="#ffffff">
     
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
             padding: 0;
-            background-color: #f0f0f0;
+            box-sizing: border-box;
         }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            color: #2d3748;
+        }
+        
         header {
-            background-color: #5183a0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #fff;
-            padding: 20px;
+            padding: 60px 20px;
             text-align: center;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
         }
+        
         h1 {
-            margin-top: 0;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            font-weight: 300;
+            opacity: 0.95;
+            margin-top: 10px;
+        }
+        
         .container {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 1200px;
+            margin: 60px auto;
+            padding: 40px 20px;
+            background-color: transparent;
         }
-        footer {
-            background-color: #5183a0;
-            color: #fff;
+        
+        .intro-section {
             text-align: center;
-            padding: 10px 0;
-            position: fixed;
-            bottom: 0;
+            margin-bottom: 50px;
+        }
+        
+        .intro-section h2 {
+            font-size: 2.2rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+        
+        .intro-section p {
+            font-size: 1.1rem;
+            color: #718096;
+            font-weight: 400;
+            line-height: 1.6;
+        }
+        
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 35px;
+            margin-top: 40px;
+        }
+        
+        .card-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 0;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+        
+        .card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.25);
+        }
+        
+        .card-image-wrapper {
             width: 100%;
+            height: 200px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            position: relative;
+        }
+        
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 20px;
+            transition: transform 0.4s ease;
+        }
+        
+        .card:hover img {
+            transform: scale(1.08);
+        }
+        
+        .card-content {
+            padding: 25px;
+        }
+        
+        .card h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        
+        .card p {
+            font-size: 0.95rem;
+            color: #718096;
+            line-height: 1.5;
+            font-weight: 400;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 6px 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-top: 15px;
+            letter-spacing: 0.3px;
+        }
+        
+        footer {
+            background: white;
+            color: #718096;
+            text-align: center;
+            padding: 25px;
+            margin-top: 60px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .intro-section h2 {
+                font-size: 1.6rem;
+            }
+            
+            .cards-container {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>Welcome to CloudPy</h1>
-        <p>Cloud Computing Platform for Advanced Python Libraries</p>
+        <h1>Welcome to Quanim</h1>
+        <p class="subtitle">Interactive Quantum Computing Visualizations</p>
     </header>
+    
     <div class="container">
-        <h2>About CloudPy</h2>
-        <p>CloudPy is a platform designed for running Python libraries in the cloud, enabling access to powerful libraries like Manim from anywhere.</p>
-        <h2>Get Started</h2>
-        <p>Start using Manim in the cloud today! Visit <a href="/manim">cloudpy.online/manim</a></p>
+        <div class="intro-section">
+            <h2>Explore Quantum Algorithms</h2>
+            <p>Learn quantum computing through beautiful, interactive visualizations powered by Manim</p>
+        </div>
+        
+        <div class="cards-container">
+            <!-- Grover's Algorithm -->
+            <a href="/manim/grover" class="card-link">
+                <div class="card">
+                    <div class="card-image-wrapper">
+                        <img src="{% static 'img/grover.png' %}" alt="Grover's Algorithm">
+                    </div>
+                    <div class="card-content">
+                        <h3>Grover's Algorithm</h3>
+                        <p>Discover how quantum computers can search unsorted databases quadratically faster than classical algorithms</p>
+                        <span class="badge">Start Learning</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Quantum Teleportation -->
+            <a href="/manim/teleportation" class="card-link">
+                <div class="card">
+                    <div class="card-image-wrapper">
+                        <img src="{% static 'img/teleportation.png' %}" alt="Quantum Teleportation">
+                    </div>
+                    <div class="card-content">
+                        <h3>Quantum Teleportation</h3>
+                        <p>Explore how quantum information can be transmitted using entanglement and classical communication</p>
+                        <span class="badge">Start Learning</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Deutsch-Jozsa Algorithm -->
+            <a href="/manim/dj" class="card-link">
+                <div class="card">
+                    <div class="card-image-wrapper">
+                        <img src="{% static 'img/dj.png' %}" alt="Deutsch-Jozsa Algorithm">
+                    </div>
+                    <div class="card-content">
+                        <h3>Deutsch-Jozsa Algorithm</h3>
+                        <p>Learn how quantum parallelism determines if a function is constant or balanced in a single query</p>
+                        <span class="badge">Start Learning</span>
+                    </div>
+                </div>
+            </a>
+        </div>
     </div>
+    
     <footer>
-        <p>&copy; 2024 CloudPy. All rights reserved.</p>
     </footer>
 </body>
 </html>
